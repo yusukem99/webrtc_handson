@@ -25,7 +25,7 @@ window.onload = async function () {
     // getusermediaで映像を取得する
     const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
-        // audio: false
+        audio: true
     });
     videotag.srcObject = stream;
 
@@ -40,18 +40,30 @@ window.onload = async function () {
 
     // 映像トラックを追加する
     // peerConnection.addTrack(videoTrack, stream);
-    const transceiver = peerConnection.addTransceiver(videoTrack);
+    const video_transceiver = peerConnection.addTransceiver(videoTrack);
+    console.log('ビデオトランシーバーを追加しました', video_transceiver);
 
     // 音声トラックを追加する
     // peerConnection.addTrack(audioTrack, stream);
+    const audio_transceiver = peerConnection.addTransceiver(audioTrack);
+    audio_transceiver.direction = 'recvonly';
+    console.log('オーディオトランシーバーを追加しました', audio_transceiver);
 
     // オファーを作成する
-    const offer = await peerConnection.createOffer();
+    const offerOptions = {
+        offerToReceiveAudio: 1,
+        offerToReceiveVideo: 1
+    };
+    const offer = await peerConnection.createOffer(offerOptions);
+    document.getElementById('offerSdpTextarea').value = offer.sdp;
+    document.getElementById('copySdpButton').addEventListener('click', async function () {
+        await navigator.clipboard.writeText(peerConnection.localDescription.sdp);
+        console.log('クリップボードにコピーしました');
+    });
+
     console.log('オファーを作成しました(Trickle)', offer);
 
     // オファーをセットする
     await peerConnection.setLocalDescription(offer);
     console.log('オファーをセットしました', offer);
-
-    // トランシーバーを使う場合のコード
 }
