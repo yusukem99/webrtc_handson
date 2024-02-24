@@ -1,3 +1,8 @@
+// 変数の宣言
+let peerConnection;
+let localStream = new MediaStream();
+let remoteStream = new MediaStream();
+
 // ドキュメントが読み込まれたら実行される　onload
 window.onload = async function () {
     let configuration = {
@@ -7,48 +12,57 @@ window.onload = async function () {
             }
         ]
     };
-    const peerConnection = new RTCPeerConnection(configuration);
+    peerConnection = new RTCPeerConnection(configuration);
     peerConnection.onicecandidate = function (event) {
         if (event.candidate) {
             console.log('onicecandidate', event.candidate);
         } else {
             console.log('onicecandidate', 'empty');
-            /*
-                第二回の授業
-            */
             const offer = peerConnection.localDescription;
             console.log('オファーを作成しました(Vanilla)', offer);
         }
     };
-    console.log('ドキュメントの読み込みが完了しました');
-    const videotag = document.getElementById('localVideo');
+    // 映像が取得できたら実行される
+    peerConnection.ontrack = function (event) {
+        const track = event.track;
+        // remoteStreamにトラックを追加する
+        remoteStream.addTrack(track);
+    };
+
+
     // getusermediaで映像を取得する
-    const stream = await navigator.mediaDevices.getUserMedia({
+    localStream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true
     });
-    videotag.srcObject = stream;
 
     // 映像を送信するためのトラックを取得する
-    const videoTrack = stream.getVideoTracks()[0];
+    const videoTrack = localStream.getVideoTracks()[0];
     // 音声を送信するためのトラックを取得する
-    const audioTrack = stream.getAudioTracks()[0];
-
-    /*
-        第二回の授業
-    */
+    const audioTrack = localStream.getAudioTracks()[0];
 
     // 映像トラックを追加する
-    // peerConnection.addTrack(videoTrack, stream);
-    const video_transceiver = peerConnection.addTransceiver(videoTrack);
-    console.log('ビデオトランシーバーを追加しました', video_transceiver);
+    peerConnection.addTrack(videoTrack, localStream);
+    peerConnection.addTrack(audioTrack, localStream);
 
-    // 音声トラックを追加する
-    // peerConnection.addTrack(audioTrack, stream);
-    const audio_transceiver = peerConnection.addTransceiver(audioTrack);
-    audio_transceiver.direction = 'recvonly';
-    console.log('オーディオトランシーバーを追加しました', audio_transceiver);
+    // transceiverを使ってトラックを追加する方式
+    // const video_transceiver = peerConnection.addTransceiver(videoTrack);
+    // const audio_transceiver = peerConnection.addTransceiver(audioTrack);
+    // audio_transceiver.direction = 'recvonly';
+    // console.log('オーディオトランシーバーを追加しました', audio_transceiver);
 
+    const localVideo = document.getElementById('localVideo');
+    localVideo.srcObject = localStream;
+    const remoteVideo = document.getElementById('remoteVideo');
+    remoteVideo.srcObject = remoteStream;
+    document.getElementById('createOfferButton').addEventListener('click', createOffer);
+    document.getElementById('setOfferButton').addEventListener('click', setRemoteOffer);
+    document.getElementById('createAnswerButton').addEventListener('click', createAnswer);
+    document.getElementById('setAnswerButton').addEventListener('click', setRemoteAnswer);
+    document.getElementById('copySdpButton').addEventListener('click', copySdp);
+}
+
+async function createOffer() {
     // オファーを作成する
     const offerOptions = {
         offerToReceiveAudio: 1,
@@ -56,14 +70,45 @@ window.onload = async function () {
     };
     const offer = await peerConnection.createOffer(offerOptions);
     document.getElementById('offerSdpTextarea').value = offer.sdp;
-    document.getElementById('copySdpButton').addEventListener('click', async function () {
-        await navigator.clipboard.writeText(peerConnection.localDescription.sdp);
-        console.log('クリップボードにコピーしました');
-    });
-
     console.log('オファーを作成しました(Trickle)', offer);
-
-    // オファーをセットする
     await peerConnection.setLocalDescription(offer);
-    console.log('オファーをセットしました', offer);
+    console.log('オファーをセットしました');
+}
+
+async function setRemoteOffer() {
+    // オファーをセットする
+    const offer = document.getElementById('remoteOfferSdpTextarea').value;
+    await peerConnection.setRemoteDescription(new RTCSessionDescription({
+        type: 'offer',
+        sdp: offer
+    }));
+    console.log('オファーをセットしました');
+}
+
+async function setRemoteAnswer() {
+    // アンサーをセットする
+    const answer = document.getElementById('remoteAnswerSdpTextarea').value;
+    await peerConnection.setRemoteDescription(new RTCSessionDescription({
+        type: 'answer',
+        sdp: answer
+    }));
+    console.log('アンサーをセットしました');
+}
+
+async function createAnswer() {
+    // アンサーを作成する
+    const answerOptions = {
+        offerToReceiveAudio: 1,
+        offerToReceiveVideo: 1
+    };
+    const answer = await peerConnection.createAnswer(answerOptions);
+    document.getElementById('answerSdpTextarea').value = answer.sdp;
+    console.log('アンサーを作成しました(Trickle)', answer);
+    await peerConnection.setLocalDescription(answer);
+    console.log('アンサーをセットしました');
+}
+
+async function copySdp() {
+    await navigator.clipboard.writeText(peerConnection.localDescription.sdp);
+    console.log('クリップボードにコピーしました');
 }

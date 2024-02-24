@@ -7,15 +7,38 @@
     <style>
         video {
             /* filter: blur(4px) invert(1) opacity(0.5); */
+            width: 480px;
+            height: 360px;
         }
     </style>
 </head>
 
 <body>
-    <video id="localVideo" class="videos" autoplay controls></video>
+    <video id="localVideo" class="videos" autoplay controls muted></video>
+    <video id="remoteVideo" class="videos" autoplay controls></video>
     <!-- 第二回の授業 -->
-    <textarea id="offerSdpTextarea" rows="10" cols="70" readonly></textarea>
-    <button id="copySdpButton">SDPをコピー</button>
+    <div>
+        <h2>オファーを作成</h2>
+        <button id="createOfferButton">オファーを作成</button>
+        <textarea id="offerSdpTextarea" rows="10" cols="20" readonly></textarea>
+        <button id="copySdpButton">SDPをコピー</button>
+    </div>
+    <div>
+        <h2>オファーを受け取る</h2>
+        <textarea id="remoteOfferSdpTextarea" rows="10" cols="20"></textarea>
+        <button id="setOfferButton">SDPをセット</button>
+    </div>
+    <div>
+        <h2>アンサーを作成</h2>
+        <button id="createAnswerButton">アンサーを作成</button>
+        <textarea id="answerSdpTextarea" rows="10" cols="20" readonly></textarea>
+        <button id="copyAnswerSdpButton">SDPをコピー</button>
+    </div>
+    <div>
+        <h2>アンサーを受け取る</h2>
+        <textarea id="remoteAnswerSdpTextarea" rows="10" cols="20"></textarea>
+        <button id="setAnswerButton">SDPをセット</button>
+    </div>
 </body>
 
 </html>
