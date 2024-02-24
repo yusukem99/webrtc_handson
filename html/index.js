@@ -31,10 +31,10 @@ window.onload = async function () {
 
 
     // getusermediaで映像を取得する
-    localStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true
-    });
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+
+    // Webカメラ以外にディスプレイの映像を取得することもできる
+    localStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
 
     // 映像を送信するためのトラックを取得する
     const videoTrack = localStream.getVideoTracks()[0];
@@ -42,8 +42,12 @@ window.onload = async function () {
     const audioTrack = localStream.getAudioTracks()[0];
 
     // 映像トラックを追加する
-    peerConnection.addTrack(videoTrack, localStream);
-    peerConnection.addTrack(audioTrack, localStream);
+    if (videoTrack && videoTrack.readyState === 'live') {
+        peerConnection.addTrack(videoTrack, localStream);
+    }
+    if (audioTrack && audioTrack.readyState === 'live') {
+        peerConnection.addTrack(audioTrack, localStream);
+    }
 
     // transceiverを使ってトラックを追加する方式
     // const video_transceiver = peerConnection.addTransceiver(videoTrack);

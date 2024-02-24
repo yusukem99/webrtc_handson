@@ -27,7 +27,7 @@ WebRTCを使ってビデオチャットを実装するハンズオンです。�
 - Vanilla/Trickle ICEの違いが説明できる
 - フルコーンNATと対称NATの違いを理解できる
 - MediaStream APIで映像音声の操作ができる
-- videoタグが扱える
+- video/audioタグが扱える
 - 次世代プロトコル(WebTransport,HTTP/3)が説明できる
 - WebSocketが説明できる
 - フレーム間圧縮(I/B/Pフレーム)が説明できる
@@ -45,3 +45,7 @@ WebRTCを使ってビデオチャットを実装するハンズオンです。�
 
 - [NATあれこれ](https://tech.zms.co.jp/nat%E3%81%82%E3%82%8C%E3%81%93%E3%82%8C/)
 - [WebRTC徹底解説](https://zenn.dev/yuki_uchida/books/c0946d19352af5)
+- [Network Cost : An Extension of ICE](https://yoshihisaonoue.wordpress.com/2021/05/03/network-cost-an-extension-of-ice/)
+
+## ICE 参考資料
+- [network-costの計算方法](https://chromium.googlesource.com/external/webrtc/+/master/rtc_base/network.cc)
