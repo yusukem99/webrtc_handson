@@ -12,6 +12,18 @@ WebRTCを使ってビデオチャットを実装するハンズオンです。�
 - Docker / Docker Compose
 - Node.js v16.20.2(lts/gallium)
 
+## セットアップ方法
+
+`docker-compose.yaml`を使って、Apacheコンテナを起動します。
+
+```bash
+docker-compose up
+```
+
+`html`フォルダがドキュメントルートになっているので`http://localhost:8080`にアクセスすると最新のコードが表示されます。
+
+過去のハンズオンは`html`ディレクトリ配下の`【番号】`のディレクトリに格納されています。
+
 ## 学習目標
 
 - WebRTCのスタックが説明できる

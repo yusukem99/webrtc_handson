@@ -2,7 +2,6 @@
 let peerConnection;
 let localStream = new MediaStream();
 let remoteStream = new MediaStream();
-let channel_chat;
 
 // ドキュメントが読み込まれたら実行される　onload
 window.onload = async function () {
@@ -14,37 +13,13 @@ window.onload = async function () {
         ]
     };
     peerConnection = new RTCPeerConnection(configuration);
-    // データチャネルを作成する
-    const channel_label = 'chat';
-    const dataChannelOptions = {
-        ordered: false,
-        maxRetransmits: 0,
-    };
-    channel_chat = peerConnection.createDataChannel(channel_label, dataChannelOptions);
-    channel_chat.onopen = function (event) {
-        console.log('chat.onopen', event);
-    };
-    channel_chat.onmessage = function (event) {
-        console.log('chat.onmessage', event);
-    }
-    // データチャンネルが作成されたら実行される
-    peerConnection.ondatachannel = function (event) {
-        console.log('ondatachannel', event);
-        const channel = event.channel;
-        channel.onopen = function (event) {
-            console.log('onopen', event);
-        };
-        channel.onmessage = function (event) {
-            console.log('onmessage', event);
-        };
-    }
     peerConnection.onicecandidate = function (event) {
         if (event.candidate) {
             console.log('onicecandidate', event.candidate);
         } else {
             console.log('onicecandidate', 'empty');
             const offer = peerConnection.localDescription;
-            console.log('オファーを作成しました(Vanilla)', offer);
+            console.log('SDPを作成しました(Vanilla)', offer);
         }
     };
     // 映像が取得できたら実行される
@@ -88,7 +63,6 @@ window.onload = async function () {
     document.getElementById('setOfferButton').addEventListener('click', setRemoteOffer);
     document.getElementById('createAnswerButton').addEventListener('click', createAnswer);
     document.getElementById('setAnswerButton').addEventListener('click', setRemoteAnswer);
-    document.getElementById('sendDataButton').addEventListener('click', sendData);
 }
 
 async function createOffer() {
@@ -133,13 +107,4 @@ async function createAnswer() {
     console.log('アンサーを作成しました(Trickle)', answer);
     await peerConnection.setLocalDescription(answer);
     console.log('アンサーをセットしました');
-}
-
-async function sendData() {
-    if (channel_chat.readyState === 'open') {
-        const message = document.getElementById('chatInput').value;
-        channel_chat.send(message);
-        console.log('データを送信しました', message);
-        document.getElementById('chatInput').value = '';
-    }
 }
