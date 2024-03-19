@@ -16,21 +16,19 @@ window.onload = async function () {
     const channel_label = 'chat';
     const dataChannelOptions = {
         ordered: false,
-        maxRetransmits: 0,
+        negotiated: true,
+        id: 0
     };
     channel_chat = peerConnection.createDataChannel(channel_label, dataChannelOptions);
-    // データチャンネルが作成されたら実行される
-    peerConnection.ondatachannel = function (event) {
-        console.log('ondatachannel', event);
-        const channel = event.channel;
-        channel.onopen = function (event) {
-            console.log('onopen', event);
-        };
-        channel.onmessage = function (event) {
-            console.log('onmessage', event);
-            document.getElementById('chatOutput').textContent += event.data + '\n';
-        };
-    }
+    console.log('channel_chat', channel_chat);
+    channel_chat.onopen = function (event) {
+        console.log('onopen', event);
+    };
+    channel_chat.onmessage = function (event) {
+        console.log('onmessage', event);
+        document.getElementById('chatOutput').textContent += event.data + '\n';
+    };
+
     peerConnection.onicecandidate = function (event) {
         if (event.candidate) {
             console.log('onicecandidate', event.candidate);

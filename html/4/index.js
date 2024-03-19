@@ -15,44 +15,38 @@ window.onload = async function () {
         ]
     };
     peerConnection = new RTCPeerConnection(configuration);
-
-    peerConnection.ondatachannel = function (event) {
-        console.log('ondatachannel', event);
-        const channel = event.channel;
-        channel.onopen = function (event) {
-            console.log('Data channel is open');
-        };
-        channel.onmessage = function (event) {
-            console.log('Received message', event.data);
-            document.getElementById('chatOutput').textContent += event.data + '\n';
-        };
-    }
-
+    // データチャネルを作成する
+    const channel_label = 'chat';
+    const dataChannelOptions = {
+        ordered: false,
+        negotiated: true,
+        id: 0
+    };
+    channel_chat = peerConnection.createDataChannel(channel_label, dataChannelOptions);
+    console.log('channel_chat', channel_chat);
+    channel_chat.onopen = function (event) {
+        console.log('onopen', event);
+    };
+    channel_chat.onmessage = function (event) {
+        console.log('onmessage', event);
+        document.getElementById('chatOutput').textContent += event.data + '\n';
+    };
     peerConnection.onicecandidate = function (event) {
         if (event.candidate) {
             sendSignalingData({ 'ice': event.candidate });
         }
     };
-
     document.getElementById('createOfferButton').addEventListener('click', createOffer);
-    document.getElementById('setOfferButton').addEventListener('click', setRemoteOffer);
-    document.getElementById('createAnswerButton').addEventListener('click', createAnswer);
-    document.getElementById('setAnswerButton').addEventListener('click', setRemoteAnswer);
     document.getElementById('sendDataButton').addEventListener('click', sendData);
-
-    channel_chat = peerConnection.createDataChannel('chat');
-    channel_chat.onopen = () => console.log('Chat channel opened');
-    channel_chat.onmessage = (event) => console.log('Received message:', event.data);
 }
 
 async function createOffer() {
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
-    sendSignalingData({ 'offer': offer });
+    sendSignalingData({ offer });
 }
 
-async function setRemoteOffer() {
-    const offer = JSON.parse(document.getElementById('remoteOfferSdpTextarea').value);
+async function setRemoteOffer(offer) {
     await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
     createAnswer();
 }
@@ -63,31 +57,38 @@ async function createAnswer() {
     sendSignalingData({ 'answer': answer });
 }
 
-async function setRemoteAnswer() {
-    const answer = JSON.parse(document.getElementById('remoteAnswerSdpTextarea').value);
+async function setRemoteAnswer(answer) {
     await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
 }
 
 function sendData() {
-    const message = document.getElementById('chatInput').value;
-    channel_chat.send(message);
-    console.log('Sent message:', message);
-    document.getElementById('chatInput').value = '';
+    if (channel_chat.readyState === 'open') {
+        const message = document.getElementById('chatInput').value;
+        channel_chat.send(message);
+        console.log('データを送信しました', message);
+        document.getElementById('chatInput').value = '';
+    }
 }
 
 function sendSignalingData(data) {
     websocket.send(JSON.stringify(data));
 }
 
-function handleSignalingData(event) {
-    const data = JSON.parse(event.data);
-    if (data.offer) {
-        document.getElementById('remoteOfferSdpTextarea').value = JSON.stringify(data.offer);
-        setRemoteOffer();
-    } else if (data.answer) {
-        document.getElementById('remoteAnswerSdpTextarea').value = JSON.stringify(data.answer);
-        setRemoteAnswer();
-    } else if (data.ice) {
-        peerConnection.addIceCandidate(new RTCIceCandidate(data.ice));
+async function handleSignalingData(event) {
+    // const data = JSON.parse(event.data);
+    // もしevent.dataがblobの場合は、以下のようにしてblobを読み込む
+    if (event.data instanceof Blob) {
+        let text = await event.data.text();
+        const data = JSON.parse(text);
+        console.log('Received data:', data);
+        if (data.offer) {
+            setRemoteOffer(data.offer);
+        } else if (data.answer) {
+            setRemoteAnswer(data.answer);
+        } else if (data.ice) {
+            peerConnection.addIceCandidate(new RTCIceCandidate(data.ice));
+        }
+    } else {
+        console.log('Received data:', event.data);
     }
 }
