@@ -18,7 +18,10 @@ window.onload = async function () {
     const channel_label = 'chat';
     const dataChannelOptions = {
         ordered: false,
-        maxRetransmits: 0,
+        maxPacketLifeTime: null,
+        maxRetransmits: null,
+        negotiated: true,
+        id: 0
     };
     channel_chat = peerConnection.createDataChannel(channel_label, dataChannelOptions);
     channel_chat.onopen = function (event) {
@@ -56,7 +59,7 @@ window.onload = async function () {
 
 
     // getusermediaで映像を取得する
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    // localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
 
     // Webカメラ以外にディスプレイの映像を取得することもできる
     localStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
